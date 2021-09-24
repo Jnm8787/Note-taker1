@@ -1,0 +1,52 @@
+    const fs = require('fs');
+    const express = require('express');
+    const path = require('path');
+    const db = require('./db/db.json')
+    const { v4: uuidv4 } = require('uuid')
+    const app = express();
+    const PORT = process.env.PORT || 5000;
+
+
+
+    app.use(express.urlencoded({ extended: true }));
+    app.use(express.json());
+
+    app.use(express.static(path.join(__dirname,"public")))
+
+    
+    app.get('/', (req,res)=> {
+        res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+    app.get('/notes', (req, res)=> {
+        res.sendFile(path.join(__dirname, 'public/notes.html'))
+});
+
+    app.get('/api/notes', (req, res)=> {
+        const data = JSON.parse(fs.readFileSync('db/db.json', 'utf-8'));
+        res.json(data);
+});
+
+
+    app.post('/api/notes', (req, res)=> {
+        const body = {...req.body};
+        body.id = uuidv4();
+    const data =JSON.parse(fs.readFileSync('./db/db.json', 'utf-8'));
+        fs.writeFileSync('./db/db.json', JSON.stringify(data.concat(body)), 'utf-8');
+        res.json(body);
+})
+
+
+    app.delete('/api/notes/:id', (req,res) => {
+        const id =req.params.id;
+    const objects = JSON.parse(fs.readFileSync('./db/db.json','utf-8'));
+
+    const items = objects.filter(item => item.id !==id);
+        fs.writeFileSync('./db/db.json', JSON.stringify(items), 'utf-8');
+     res.json(items);
+})
+
+//port listening
+app.listen(PORT, function() {
+    console.log("App listening on PORT: " + PORT);
+});  
